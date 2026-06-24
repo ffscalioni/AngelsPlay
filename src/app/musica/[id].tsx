@@ -5,13 +5,12 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ProgressBar } from '@/components/ProgressBar';
+import { RehearsalPanel } from '@/components/RehearsalPanel';
 import { useAuth } from '@/context/AuthContext';
 import { usePlayer } from '@/context/PlayerContext';
 import { getSong } from '@/data/catalog';
 import { formatTime } from '@/lib/format';
 import { colors, radius, spacing } from '@/theme/colors';
-
-const VOICES = ['Instrumental', 'Soprano', 'Contralto', 'Tenor', 'Baixo'];
 
 export default function PlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,7 +20,7 @@ export default function PlayerScreen() {
 
   const song = getSong(id) ?? current;
   const [semitones, setSemitones] = useState(0);
-  const [activeVoices, setActiveVoices] = useState<string[]>(VOICES);
+  const [guideRemoved, setGuideRemoved] = useState(false);
 
   if (!song) {
     return (
@@ -40,16 +39,14 @@ export default function PlayerScreen() {
     );
   };
 
-  const toggleVoice = (v: string) => {
-    if (!isPremium) return requirePremium('Vozes isoladas');
-    setActiveVoices((prev) =>
-      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
-    );
-  };
-
   const changeKey = (delta: number) => {
     if (!isPremium) return requirePremium('Mudança de tonalidade');
     setSemitones((s) => Math.max(-6, Math.min(6, s + delta)));
+  };
+
+  const toggleGuide = () => {
+    if (!isPremium) return requirePremium('Remover voz-guia');
+    setGuideRemoved((v) => !v);
   };
 
   return (
@@ -77,9 +74,7 @@ export default function PlayerScreen() {
         <Pressable onPress={() => seekTo(Math.max(0, position - 15))} hitSlop={12}>
           <Ionicons name="play-back" size={30} color={colors.text} />
         </Pressable>
-        <Pressable
-          style={styles.playBtn}
-          onPress={() => (isThis ? toggle() : play(song))}>
+        <Pressable style={styles.playBtn} onPress={() => (isThis ? toggle() : play(song))}>
           <Ionicons name={isThis && isPlaying ? 'pause' : 'play'} size={36} color={colors.text} />
         </Pressable>
         <Pressable onPress={() => seekTo(position + 15)} hitSlop={12}>
@@ -87,10 +82,10 @@ export default function PlayerScreen() {
         </Pressable>
       </View>
 
-      {/* Controles premium de ensaio */}
+      {/* Tonalidade (simulada nesta fase) */}
       <View style={styles.panel}>
         <View style={styles.panelHeader}>
-          <Text style={styles.panelTitle}>Modo ensaio</Text>
+          <Text style={styles.panelTitle}>Tonalidade e voz-guia</Text>
           {!isPremium && (
             <View style={styles.premiumTag}>
               <Ionicons name="lock-closed" size={12} color={colors.bg} />
@@ -99,49 +94,31 @@ export default function PlayerScreen() {
           )}
         </View>
 
-        <Text style={styles.panelLabel}>Tonalidade</Text>
         <View style={styles.keyRow}>
           <Pressable style={styles.keyBtn} onPress={() => changeKey(-1)}>
             <Ionicons name="remove" size={22} color={colors.text} />
           </Pressable>
-          <Text style={styles.keyValue}>
-            {semitones > 0 ? `+${semitones}` : semitones} st
-          </Text>
+          <Text style={styles.keyValue}>{semitones > 0 ? `+${semitones}` : semitones} st</Text>
           <Pressable style={styles.keyBtn} onPress={() => changeKey(1)}>
             <Ionicons name="add" size={22} color={colors.text} />
           </Pressable>
           <Pressable
-            style={styles.guideBtn}
-            onPress={() =>
-              isPremium ? toggleVoice('Soprano') : requirePremium('Remover voz-guia')
-            }>
-            <Text style={styles.guideText}>Remover voz-guia</Text>
+            style={[styles.guideBtn, guideRemoved && { backgroundColor: colors.accent }]}
+            onPress={toggleGuide}>
+            <Text style={[styles.guideText, guideRemoved && { color: colors.bg }]}>
+              {guideRemoved ? 'Voz-guia: off' : 'Remover voz-guia'}
+            </Text>
           </Pressable>
         </View>
 
-        <Text style={[styles.panelLabel, { marginTop: spacing.md }]}>
-          Vozes {song.hasStems ? '' : '(indisponível nesta faixa)'}
-        </Text>
-        <View style={styles.voices}>
-          {VOICES.map((v) => {
-            const on = activeVoices.includes(v) && isPremium;
-            return (
-              <Pressable
-                key={v}
-                disabled={!song.hasStems}
-                style={[styles.voice, on && styles.voiceOn, !song.hasStems && { opacity: 0.4 }]}
-                onPress={() => toggleVoice(v)}>
-                <Text style={[styles.voiceText, on && { color: colors.bg }]}>{v}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
         <Text style={styles.note}>
-          * No esqueleto, tonalidade e isolamento de vozes são demonstrativos. Em produção, a
-          mudança de tom roda no aparelho e as vozes vêm das faixas separadas (stems) — ver PRD §9.
+          * A mudança de tom roda no aparelho (pitch shift) e ainda é demonstrativa nesta fase —
+          ver PRD §9.
         </Text>
       </View>
+
+      {/* Vozes isoladas — funcionando de verdade (motor de stems) */}
+      <RehearsalPanel song={song} isPremium={isPremium} onRequirePremium={requirePremium} />
 
       {song.projectId && (
         <Pressable
@@ -187,7 +164,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   premiumTagText: { color: colors.bg, fontSize: 11, fontWeight: '800' },
-  panelLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
   keyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   keyBtn: {
     width: 40,
@@ -206,15 +182,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   guideText: { color: colors.text, fontSize: 13, fontWeight: '600' },
-  voices: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  voice: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surfaceAlt,
-  },
-  voiceOn: { backgroundColor: colors.accent },
-  voiceText: { color: colors.text, fontWeight: '600', fontSize: 13 },
   note: { color: colors.textMuted, fontSize: 11, fontStyle: 'italic', marginTop: spacing.xs },
   supportLink: {
     flexDirection: 'row',

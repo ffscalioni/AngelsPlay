@@ -28,6 +28,7 @@ type PlayerState = {
   duration: number;
   play: (song: Song) => void;
   toggle: () => void;
+  pause: () => void;
   seekTo: (seconds: number) => void;
 };
 
@@ -94,12 +95,20 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    const pause = () => {
+      const p = playerRef.current;
+      if (p && p.playing) {
+        p.pause();
+        setIsPlaying(false);
+      }
+    };
+
     const seekTo = (seconds: number) => {
       playerRef.current?.seekTo(seconds).catch(() => {});
       setPosition(seconds);
     };
 
-    return { current, isPlaying, position, duration, play, toggle, seekTo };
+    return { current, isPlaying, position, duration, play, toggle, pause, seekTo };
   }, [current, isPlaying, position, duration]);
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;

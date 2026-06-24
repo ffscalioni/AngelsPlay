@@ -1,9 +1,21 @@
-import type { Song } from './types';
+import type { Song, Stem } from './types';
 
 /**
  * Catálogo de exemplo (mock). Os áudios apontam para arquivos públicos de demonstração;
  * em produção o streaming virá do S3 via CloudFront com URL assinada (ver PRD §9).
+ *
+ * NOTA SOBRE OS STEMS: enquanto a gravadora não confirma/disponibiliza os multitracks reais
+ * (spike E6-0), usamos faixas públicas como "vozes" de demonstração — elas provam o MOTOR de
+ * ensaio (tocar várias faixas em sincronia e ligar/desligar cada voz), não a mixagem musical.
  */
+const demoStems: Stem[] = [
+  { id: 'inst', label: 'Instrumental', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3' },
+  { id: 'soprano', label: 'Soprano', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
+  { id: 'contralto', label: 'Contralto', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3' },
+  { id: 'tenor', label: 'Tenor', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3' },
+  { id: 'baixo', label: 'Baixo', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3' },
+];
+
 export const catalog: Song[] = [
   {
     id: 's1',
@@ -13,7 +25,7 @@ export const catalog: Song[] = [
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
     earlyAccess: true,
     projectId: 'p1',
-    hasStems: true,
+    stems: demoStems,
   },
   {
     id: 's2',
@@ -23,7 +35,7 @@ export const catalog: Song[] = [
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
     earlyAccess: true,
     projectId: 'p3',
-    hasStems: true,
+    stems: demoStems,
   },
   {
     id: 's3',
@@ -31,7 +43,7 @@ export const catalog: Song[] = [
     artist: 'Coral Esperança',
     cover: 'https://picsum.photos/seed/luz/400',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    hasStems: true,
+    stems: demoStems,
   },
   {
     id: 's4',
@@ -53,7 +65,7 @@ export const catalog: Song[] = [
     artist: 'Coral Esperança',
     cover: 'https://picsum.photos/seed/santo/400',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-    hasStems: true,
+    stems: demoStems,
   },
 ];
 

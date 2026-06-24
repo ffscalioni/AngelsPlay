@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { usePlayer } from '@/context/PlayerContext';
-import type { Song } from '@/data/types';
+import { songHasStems, type Song } from '@/data/types';
 import { colors, radius, spacing } from '@/theme/colors';
 
 export function SongRow({ song }: { song: Song }) {
@@ -28,7 +28,7 @@ export function SongRow({ song }: { song: Song }) {
         </View>
         <Text style={styles.artist} numberOfLines={1}>
           {song.artist}
-          {song.hasStems ? '  ·  vozes p/ ensaio' : ''}
+          {songHasStems(song) ? '  ·  vozes p/ ensaio' : ''}
         </Text>
       </View>
       <Ionicons

@@ -1,3 +1,10 @@
+/** Uma faixa isolada (voz/instrumento) de uma música, para o Modo Ensaio. */
+export type Stem = {
+  id: string;
+  label: string;
+  url: string;
+};
+
 export type Song = {
   id: string;
   title: string;
@@ -8,9 +15,14 @@ export type Song = {
   earlyAccess?: boolean;
   /** Projeto de crowdfunding ao qual a música pertence. */
   projectId?: string;
-  /** Indica que o título possui faixas separadas (stems) para ensaio. */
-  hasStems?: boolean;
+  /** Faixas separadas (stems) para ensaio. Presente apenas em títulos com multitrack. */
+  stems?: Stem[];
 };
+
+/** Conveniência: a música possui faixas separadas para ensaio? */
+export function songHasStems(song: Song): boolean {
+  return !!song.stems && song.stems.length > 0;
+}
 
 export type ProjectUpdate = {
   date: string;
